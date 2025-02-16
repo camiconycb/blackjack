@@ -12,7 +12,6 @@ import (
 	"github.com/hyperjumptech/grule-rule-engine/ast"
 	"github.com/hyperjumptech/grule-rule-engine/builder"
 	"github.com/hyperjumptech/grule-rule-engine/pkg"
-	"github.com/rs/cors"
 )
 
 type Request struct {
@@ -389,10 +388,6 @@ func main() {
 	http.ListenAndServe(":8080", secured)
 	mux.HandleFunc("/api/advice", adviceHandler)
 	mux.HandleFunc("/get-token", getTokenHandler)
-	handler := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"POST"},
-	}).Handler(mux)
 
 	port := os.Getenv("PORT")
 	if port == "" {
