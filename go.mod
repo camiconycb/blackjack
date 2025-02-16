@@ -1,6 +1,6 @@
 module blackjack-advice
 
-go 1.23.6
+go 1.21
 
 require (
 	github.com/hyperjumptech/grule-rule-engine v1.15.0
