@@ -340,6 +340,17 @@ rule BlackjackNatural "Blackjack Natural" {
 var extensionID = fmt.Sprintf("chrome-extension://%s", os.Getenv("extension_id"))
 var secretToken = os.Getenv("secret_token")
 
+func getTokenHandler(w http.ResponseWriter, r *http.Request) {
+	if secretToken == "" {
+		http.Error(w, "Server error: missing token", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]string{"token": secretToken}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
@@ -377,7 +388,7 @@ func main() {
 
 	http.ListenAndServe(":8080", secured)
 	mux.HandleFunc("/api/advice", adviceHandler)
-
+	mux.HandleFunc("/get-token", getTokenHandler)
 	handler := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"POST"},
