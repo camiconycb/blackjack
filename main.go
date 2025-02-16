@@ -19,9 +19,9 @@ type Request struct {
 	Player    []string `json:"player"`
 	Dealer    []string `json:"dealer"`
 	GameRules struct {
-		DASAllowed      bool `json:"dasAllowed"`
+		DASAllowed       bool `json:"dasAllowed"`
 		SurrenderAllowed bool `json:"surrenderAllowed"`
-		Decks           int  `json:"decks"`
+		Decks            int  `json:"decks"`
 	} `json:"gameRules"`
 }
 
@@ -30,15 +30,15 @@ type Response struct {
 }
 
 type BlackjackFact struct {
-	PlayerTotal    int
-	SoftTotal      bool
-	DealerCard     int
-	CanSplit       bool
-	DASAllowed     bool
+	PlayerTotal      int
+	SoftTotal        bool
+	DealerCard       int
+	CanSplit         bool
+	DASAllowed       bool
 	SurrenderAllowed bool
-	Decks          int
-	RecommendedAct string
-	Insurance       bool
+	Decks            int
+	RecommendedAct   string
+	Insurance        bool
 }
 
 var knowledgeLibrary *ast.KnowledgeLibrary
@@ -337,12 +337,47 @@ rule BlackjackNatural "Blackjack Natural" {
 }
 `
 
+var extensionID = fmt.Sprintf("chrome-extension://%s", os.Getenv("extension_id"))
+var secretToken = os.Getenv("secret_token")
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin == extensionID {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+			next.ServeHTTP(w, r)
+		} else {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+		}
+	})
+}
+func tokenMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		if token != "Bearer "+secretToken {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	initRuleEngine()
-	
+
 	mux := http.NewServeMux()
+	protected := tokenMiddleware(mux)
+	secured := corsMiddleware(protected)
+
+	http.ListenAndServe(":8080", secured)
 	mux.HandleFunc("/api/advice", adviceHandler)
-	
+
 	handler := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"POST"},
@@ -362,7 +397,7 @@ func initRuleEngine() {
 	ruleBuilder := builder.NewRuleBuilder(knowledgeLibrary)
 
 	err := ruleBuilder.BuildRuleFromResource(
-		"BlackjackStrategy",  // Nombre del conocimiento
+		"BlackjackStrategy", // Nombre del conocimiento
 		"1.0.0",             // Versión
 		pkg.NewBytesResource([]byte(strategyRules)),
 	)
@@ -412,27 +447,27 @@ func executeRules(fact *BlackjackFact) {
 
 	if fact.CanSplit {
 		if fact.PlayerTotal == 12 && fact.DealerCard >= 2 && fact.DealerCard <= 6 {
-			fact.RecommendedAct = "SPLIT"  // Par de 6s
+			fact.RecommendedAct = "SPLIT" // Par de 6s
 			return
 		}
 		if fact.PlayerTotal == 14 && fact.DealerCard >= 2 && fact.DealerCard <= 7 {
-			fact.RecommendedAct = "SPLIT"  // Par de 7s
+			fact.RecommendedAct = "SPLIT" // Par de 7s
 			return
 		}
 		if fact.PlayerTotal == 16 {
-			fact.RecommendedAct = "SPLIT"  // Par de 8s
+			fact.RecommendedAct = "SPLIT" // Par de 8s
 			return
 		}
 		if fact.PlayerTotal == 18 && fact.DealerCard <= 9 {
-			fact.RecommendedAct = "SPLIT"  // Par de 9s
+			fact.RecommendedAct = "SPLIT" // Par de 9s
 			return
 		}
 		if fact.PlayerTotal == 20 {
-			fact.RecommendedAct = "STAND"  // Par de 10s
+			fact.RecommendedAct = "STAND" // Par de 10s
 			return
 		}
 		if fact.PlayerTotal == 22 || (fact.PlayerTotal == 12 && fact.SoftTotal) {
-			fact.RecommendedAct = "SPLIT"  // Par de ases
+			fact.RecommendedAct = "SPLIT" // Par de ases
 			return
 		}
 	}
@@ -508,14 +543,13 @@ func createFact(req Request) (*BlackjackFact, error) {
 	}
 
 	return &BlackjackFact{
-		PlayerTotal:    playerTotal,
-		SoftTotal:      soft,
-		DealerCard:     dealerCard,
-		CanSplit:       canSplit(req.Player),
-		DASAllowed:     req.GameRules.DASAllowed,
+		PlayerTotal:      playerTotal,
+		SoftTotal:        soft,
+		DealerCard:       dealerCard,
+		CanSplit:         canSplit(req.Player),
+		DASAllowed:       req.GameRules.DASAllowed,
 		SurrenderAllowed: req.GameRules.SurrenderAllowed,
-		Decks:          req.GameRules.Decks,
-		
+		Decks:            req.GameRules.Decks,
 	}, nil
 }
 
