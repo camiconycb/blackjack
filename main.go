@@ -395,7 +395,7 @@ func main() {
 	}
 
 	log.Printf("Servidor iniciado y escuchando en el puerto %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, handler))
+	log.Fatal(http.ListenAndServe(":"+port, secured))
 }
 
 func initRuleEngine() {
