@@ -486,7 +486,7 @@ func executeRules(fact *BlackjackFact) {
 	}
 
 	if fact.SurrenderAllowed {
-		if fact.SoftTotal == false {
+		if !fact.SoftTotal {
 			if fact.PlayerTotal == 16 && fact.DealerCard >= 9 {
 				fact.RecommendedAct = "SURRENDER"
 				return
