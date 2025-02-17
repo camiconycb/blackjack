@@ -361,10 +361,8 @@ func corsMiddleware(next http.Handler) http.Handler {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
-			next.ServeHTTP(w, r)
-		} else {
-			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
+		next.ServeHTTP(w, r)
 	})
 }
 func tokenMiddleware(next http.Handler) http.Handler {
@@ -378,16 +376,25 @@ func tokenMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func extensionMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin != extensionID {
+			http.Error(w, "Forbidden: Only extension allowed", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	initRuleEngine()
 
 	mux := http.NewServeMux()
-	protected := tokenMiddleware(mux)
-	secured := corsMiddleware(protected)
+	mux.Handle("/api/advice", tokenMiddleware(http.HandlerFunc(adviceHandler)))
+	mux.Handle("/get-token", extensionMiddleware(http.HandlerFunc(getTokenHandler)))
 
-	http.ListenAndServe(":8080", secured)
-	mux.HandleFunc("/api/advice", adviceHandler)
-	mux.HandleFunc("/get-token", getTokenHandler)
+	handler := corsMiddleware(mux)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -395,7 +402,7 @@ func main() {
 	}
 
 	log.Printf("Servidor iniciado y escuchando en el puerto %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, secured))
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
 func initRuleEngine() {
