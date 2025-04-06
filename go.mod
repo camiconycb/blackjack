@@ -2,10 +2,7 @@ module blackjack-advice
 
 go 1.21
 
-require (
-	github.com/hyperjumptech/grule-rule-engine v1.15.0
-	github.com/rs/cors v1.11.1
-)
+require github.com/hyperjumptech/grule-rule-engine v1.15.0
 
 require (
 	dario.cat/mergo v1.0.0 // indirect

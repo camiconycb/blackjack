@@ -410,8 +410,8 @@ func initRuleEngine() {
 	ruleBuilder := builder.NewRuleBuilder(knowledgeLibrary)
 
 	err := ruleBuilder.BuildRuleFromResource(
-		"BlackjackStrategy", // Nombre del conocimiento
-		"1.0.0",             // Versión
+		"BlackjackStrategy",
+		"1.0.0",
 		pkg.NewBytesResource([]byte(strategyRules)),
 	)
 	if err != nil {
