@@ -372,7 +372,7 @@ func tokenMiddleware(next http.Handler) http.Handler {
 		token := r.Header.Get("Authorization")
 		if token != "Bearer "+secretToken {
 			fmt.Println("token ", token)
-			fmt.Println("secretToken ", "secretToken")
+			fmt.Println("secretToken ", secretToken)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
