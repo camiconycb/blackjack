@@ -396,10 +396,10 @@ func main() {
 	initRuleEngine()
 
 	mux := http.NewServeMux()
-	mux.Handle("/api/advice", tokenMiddleware(http.HandlerFunc(adviceHandler)))
-	mux.Handle("/get-token", extensionMiddleware(http.HandlerFunc(getTokenHandler)))
-
 	handler := corsMiddleware(mux)
+
+	mux.Handle("/get-token", extensionMiddleware(http.HandlerFunc(getTokenHandler)))
+	mux.Handle("/api/advice", tokenMiddleware(http.HandlerFunc(adviceHandler)))
 
 	port := os.Getenv("PORT")
 	if port == "" {
