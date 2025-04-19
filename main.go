@@ -411,7 +411,7 @@ func adviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	executeRules(fact)
-
+	fmt.Println("fact.RecommendedAct", fact.RecommendedAct)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(Response{Action: fact.RecommendedAct})
 }
