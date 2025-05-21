@@ -360,9 +360,9 @@ func main() {
 	initRuleEngine()
 
 	mux := http.NewServeMux()
-	handler := corsMiddleware(mux)
-
 	mux.Handle("/api/advice", http.HandlerFunc(adviceHandler))
+
+	handler := corsMiddleware(mux)
 
 	port := os.Getenv("PORT")
 	if port == "" {
